@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
 use ArrayIterator;
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -15,6 +17,7 @@ use Roave\BetterReflection\Reflection\ReflectionClass;
 use Roave\BetterReflection\Reflector\DefaultReflector;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidFileInfo;
 use Roave\BetterReflection\SourceLocator\Type\FileIteratorSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceContainsFilter;
 use Roave\BetterReflectionTest\Assets\DirectoryScannerAssets;
 use Roave\BetterReflectionTest\BetterReflectionSingleton;
 use stdClass;
@@ -59,6 +62,46 @@ class FileIteratorSourceLocatorTest extends TestCase
 
         self::assertEquals(DirectoryScannerAssets\Bar\FooBar::class, $classNames[0]);
         self::assertEquals(DirectoryScannerAssets\Foo::class, $classNames[1]);
+    }
+
+    #[DataProvider('iterateClassesProvider')]
+    public function testIterateClasses(
+        array $filter,
+        array $expected,
+    ): void
+    {
+        /** @var Generator<ReflectionClass> $generator */
+        $generator = $this->sourceLocator->iterateIdentifiersByType(
+            new DefaultReflector($this->sourceLocator),
+            new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
+            $filter ? new SourceContainsFilter($filter) : null,
+        );
+
+        $classes = [];
+        foreach ($generator as $class) {
+            $classes[] = $class->getName();
+        }
+
+        $this->assertSame($expected, $classes);
+    }
+
+    public static function iterateClassesProvider(): array
+    {
+        return [
+            'Without filter' => [
+                'filter' => [],
+                'expected' => [
+                    DirectoryScannerAssets\Bar\FooBar::class,
+                    DirectoryScannerAssets\Foo::class,
+                ],
+            ],
+            'With filter' => [
+                'filter' => ['FooBar'],
+                'expected' => [
+                    DirectoryScannerAssets\Bar\FooBar::class,
+                ],
+            ]
+        ];
     }
 
     public function testLocateIdentifier(): void
