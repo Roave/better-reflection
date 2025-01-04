@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type\Composer;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
@@ -15,8 +16,8 @@ use Roave\BetterReflection\SourceLocator\FileChecker;
 use Roave\BetterReflection\SourceLocator\Located\LocatedSource;
 use Roave\BetterReflection\SourceLocator\Type\Composer\Psr\PsrAutoloaderMapping;
 use Roave\BetterReflection\SourceLocator\Type\DirectoriesSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 use Roave\BetterReflection\SourceLocator\Type\SourceLocator;
-
 use function file_get_contents;
 
 final class PsrAutoloaderLocator implements SourceLocator
@@ -62,5 +63,22 @@ final class PsrAutoloaderLocator implements SourceLocator
             $this->mapping->directories(),
             $this->astLocator,
         ))->locateIdentifiersByType($reflector, $identifierType);
+    }
+
+    /**
+     * Iterate filtered identifiers of a type
+     *
+     * @return Generator<Reflection>
+     */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter,
+    ): Generator
+    {
+        return (new DirectoriesSourceLocator(
+            $this->mapping->directories(),
+            $this->astLocator,
+        ))->iterateIdentifiersByType($reflector, $identifierType, $sourceFilter);
     }
 }

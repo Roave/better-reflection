@@ -6,6 +6,7 @@ namespace Roave\BetterReflection\SourceLocator\Type;
 
 use InvalidArgumentException;
 use Roave\BetterReflection\Identifier\Identifier;
+use Roave\BetterReflection\Reflection\ReflectionClass;
 use Roave\BetterReflection\SourceLocator\Ast\Locator;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidFileLocation;
 use Roave\BetterReflection\SourceLocator\FileChecker;
@@ -43,9 +44,28 @@ class SingleFileSourceLocator extends AbstractSourceLocator
      */
     protected function createLocatedSource(Identifier $identifier): LocatedSource|null
     {
+        $content = file_get_contents($this->fileName);
+        if (! $content) {
+            return null;
+        }
+
+        $name = $identifier->getName();
+
+        if (
+            $name !== Identifier::WILDCARD &&
+            ! str_starts_with($name, ReflectionClass::ANONYMOUS_CLASS_NAME_PREFIX)
+        ) {
+
+            $shortName = array_reverse(explode('\\', $identifier->getName()))[0];
+
+            if (! str_contains($content, $shortName)) {
+                return null;
+            }
+        }
+
         return new LocatedSource(
-            file_get_contents($this->fileName),
-            $identifier->getName(),
+            $content,
+            $name,
             $this->fileName,
         );
     }

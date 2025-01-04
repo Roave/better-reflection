@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use FilesystemIterator;
+use Generator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Roave\BetterReflection\Identifier\Identifier;
@@ -13,6 +15,7 @@ use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Ast\Locator;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidDirectory;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidFileInfo;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 
 use function array_map;
 use function is_dir;
@@ -41,7 +44,7 @@ class DirectoriesSourceLocator implements SourceLocator
                 return new FileIteratorSourceLocator(
                     new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
                         $directory,
-                        RecursiveDirectoryIterator::SKIP_DOTS,
+                        FilesystemIterator::SKIP_DOTS,
                     )),
                     $astLocator,
                 );
@@ -61,5 +64,17 @@ class DirectoriesSourceLocator implements SourceLocator
     public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
     {
         return $this->aggregateSourceLocator->locateIdentifiersByType($reflector, $identifierType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter,
+    ): Generator
+    {
+        return $this->aggregateSourceLocator->iterateIdentifiersByType($reflector, $identifierType, $sourceFilter);
     }
 }

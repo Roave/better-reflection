@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeTraverser;
@@ -23,6 +24,7 @@ use Roave\BetterReflection\SourceLocator\Exception\NoAnonymousClassOnLine;
 use Roave\BetterReflection\SourceLocator\Exception\TwoAnonymousClassesOnSameLine;
 use Roave\BetterReflection\SourceLocator\FileChecker;
 use Roave\BetterReflection\SourceLocator\Located\AnonymousLocatedSource;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 use Roave\BetterReflection\Util\FileHelper;
 
 use function array_filter;
@@ -58,6 +60,38 @@ final class AnonymousClassObjectSourceLocator implements SourceLocator
     public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
     {
         return array_filter([$this->getReflectionClass($reflector, $identifierType)]);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ParseToAstFailure
+     */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter
+    ): Generator
+    {
+        $reflections = $this->locateIdentifiersByType($reflector, $identifierType);
+        if (! $reflections) {
+            return;
+        }
+
+        foreach ($reflections as $reflection) {
+            $locatedSource = $reflection->getLocatedSource();
+            $isAllowed = $sourceFilter?->isAllowed(
+                $locatedSource->getSource(),
+                $locatedSource->getName(),
+                $locatedSource->getFileName(),
+            );
+
+            if ($isAllowed === false) {
+                continue;
+            }
+
+            yield $reflection;
+        }
     }
 
     private function getReflectionClass(Reflector $reflector, IdentifierType $identifierType): ReflectionClass|null

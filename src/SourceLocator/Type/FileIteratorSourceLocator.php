@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use Iterator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
@@ -12,14 +13,10 @@ use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Ast\Locator;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidFileInfo;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidFileLocation;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 use SplFileInfo;
 
-use function array_filter;
-use function array_map;
-use function array_values;
-use function iterator_to_array;
 use function pathinfo;
-
 use const PATHINFO_EXTENSION;
 
 /**
@@ -27,6 +24,8 @@ use const PATHINFO_EXTENSION;
  */
 class FileIteratorSourceLocator implements SourceLocator
 {
+    private const PHP_FILE_EXTENSION = 'php';
+
     private AggregateSourceLocator|null $aggregateSourceLocator = null;
 
     /** @var Iterator<SplFileInfo> */
@@ -52,20 +51,22 @@ class FileIteratorSourceLocator implements SourceLocator
     /** @throws InvalidFileLocation */
     private function getAggregatedSourceLocator(): AggregateSourceLocator
     {
-        // @infection-ignore-all Coalesce: There's no difference, it's just optimization
-        return $this->aggregateSourceLocator
-            ?? $this->aggregateSourceLocator = new AggregateSourceLocator(array_values(array_filter(array_map(
-                function (SplFileInfo $item): SingleFileSourceLocator|null {
-                    $realPath = $item->getRealPath();
+        if ($this->aggregateSourceLocator) {
+            return $this->aggregateSourceLocator;
+        }
 
-                    if (! ($item->isFile() && pathinfo($realPath, PATHINFO_EXTENSION) === 'php')) {
-                        return null;
-                    }
+        $sourceLocators = [];
+        foreach ($this->fileSystemIterator as $fileInfo) {
+            $realPath = $fileInfo->getRealPath();
+            if (
+                $fileInfo->isFile() &&
+                pathinfo($fileInfo->getRealPath(), PATHINFO_EXTENSION) === self::PHP_FILE_EXTENSION
+            ) {
+                $sourceLocators[] = new SingleFileSourceLocator($realPath, $this->astLocator);
+            }
+        }
 
-                    return new SingleFileSourceLocator($realPath, $this->astLocator);
-                },
-                iterator_to_array($this->fileSystemIterator),
-            ))));
+        return $this->aggregateSourceLocator = new AggregateSourceLocator($sourceLocators);
     }
 
     /**
@@ -86,5 +87,22 @@ class FileIteratorSourceLocator implements SourceLocator
     public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
     {
         return $this->getAggregatedSourceLocator()->locateIdentifiersByType($reflector, $identifierType);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws InvalidFileLocation
+     */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter,
+    ): Generator {
+        return $this->getAggregatedSourceLocator()->iterateIdentifiersByType(
+            $reflector,
+            $identifierType,
+            $sourceFilter,
+        );
     }
 }

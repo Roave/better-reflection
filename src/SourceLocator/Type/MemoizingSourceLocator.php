@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
+use Iterator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
 use Roave\BetterReflection\Reflector\Reflector;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 
 use function array_key_exists;
 use function spl_object_id;
@@ -20,6 +23,9 @@ final class MemoizingSourceLocator implements SourceLocator
 
     /** @var array<string, list<Reflection>> indexed by reflector key and identifier type cache key */
     private array $cacheByIdentifierTypeKeyAndOid = [];
+
+    /** @var array<string, Iterator<Reflection>> indexed by reflector key and identifier type cache key */
+    private array $cacheIteratorByIdentifierTypeKeyAndOid = [];
 
     public function __construct(private SourceLocator $wrappedSourceLocator)
     {
@@ -48,6 +54,31 @@ final class MemoizingSourceLocator implements SourceLocator
 
         return $this->cacheByIdentifierTypeKeyAndOid[$cacheKey]
             = $this->wrappedSourceLocator->locateIdentifiersByType($reflector, $identifierType);
+    }
+
+    /** @return Generator<Reflection> */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter,
+    ): Generator {
+        $cacheKey = sprintf('%s_%s_%s',
+            $this->reflectorCacheKey($reflector),
+            $this->identifierTypeToCacheKey($identifierType),
+            $sourceFilter?->getKey() ?? ''
+        );
+
+        if (array_key_exists($cacheKey, $this->cacheIteratorByIdentifierTypeKeyAndOid)) {
+            yield from $this->cacheIteratorByIdentifierTypeKeyAndOid[$cacheKey];
+            return;
+        }
+
+        foreach (
+            $this->wrappedSourceLocator->iterateIdentifiersByType($reflector, $identifierType, $sourceFilter) as $item
+        ) {
+            $this->cacheIteratorByIdentifierTypeKeyAndOid[$cacheKey][] = $item;
+            yield $item;
+        }
     }
 
     private function reflectorCacheKey(Reflector $reflector): string
