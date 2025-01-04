@@ -1,6 +1,6 @@
 <?php
 
-# parse all classes in a directory that use some dependencies from /vendor
+# example of class iterator operation
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 

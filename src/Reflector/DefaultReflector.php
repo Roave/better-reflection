@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\Reflector;
 
-use Iterator;
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\ReflectionClass;
@@ -60,11 +60,11 @@ final class DefaultReflector implements Reflector
     /**
      * Iterate classes available in the scope specified by the SourceLocator.
      *
-     * @return Iterator<ReflectionClass>
+     * @return Generator<ReflectionClass>
      */
-    public function iterateClasses(?SourceFilter $filter = null): Iterator
+    public function iterateClasses(?SourceFilter $filter = null): Generator
     {
-        /** @var Iterator<ReflectionClass> $allClasses */
+        /** @var Generator<ReflectionClass> $allClasses */
         $allClasses = $this->sourceLocator->iterateIdentifiersByType(
             $this,
             new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
