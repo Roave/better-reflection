@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\Reflector;
 
+use Iterator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\ReflectionClass;
 use Roave\BetterReflection\Reflection\ReflectionConstant;
 use Roave\BetterReflection\Reflection\ReflectionFunction;
 use Roave\BetterReflection\Reflector\Exception\IdentifierNotFound;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 use Roave\BetterReflection\SourceLocator\Type\SourceLocator;
-
 use function assert;
 
 final class DefaultReflector implements Reflector
@@ -54,6 +55,23 @@ final class DefaultReflector implements Reflector
         );
 
         return $allClasses;
+    }
+
+    /**
+     * Iterate classes available in the scope specified by the SourceLocator.
+     *
+     * @return Iterator<ReflectionClass>
+     */
+    public function iterateClasses(?SourceFilter $filter = null): Iterator
+    {
+        /** @var Iterator<ReflectionClass> $allClasses */
+        $allClasses = $this->sourceLocator->iterateIdentifiersByType(
+            $this,
+            new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
+            $filter,
+        );
+
+        yield from $allClasses;
     }
 
     /**
