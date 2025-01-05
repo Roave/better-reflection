@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use Iterator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
@@ -83,8 +84,8 @@ class FileIteratorSourceLocator implements SourceLocator
      *
      * @throws InvalidFileLocation
      */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator
     {
-        return $this->getAggregatedSourceLocator()->locateIdentifiersByType($reflector, $identifierType);
+        yield from $this->getAggregatedSourceLocator()->locateIdentifiersByType($reflector, $identifierType);
     }
 }

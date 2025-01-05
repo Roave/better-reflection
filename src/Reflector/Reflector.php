@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\Reflector;
 
+use Generator;
 use Roave\BetterReflection\Reflection\ReflectionClass;
 use Roave\BetterReflection\Reflection\ReflectionConstant;
 use Roave\BetterReflection\Reflection\ReflectionFunction;
@@ -21,9 +22,9 @@ interface Reflector
     /**
      * Get all the classes available in the scope specified by the SourceLocator.
      *
-     * @return list<ReflectionClass>
+     * @return Generator<ReflectionClass>
      */
-    public function reflectAllClasses(): iterable;
+    public function reflectAllClasses(): Generator;
 
     /**
      * Create a ReflectionFunction for the specified $functionName.
@@ -35,9 +36,9 @@ interface Reflector
     /**
      * Get all the functions available in the scope specified by the SourceLocator.
      *
-     * @return list<ReflectionFunction>
+     * @return Generator<ReflectionFunction>
      */
-    public function reflectAllFunctions(): iterable;
+    public function reflectAllFunctions(): Generator;
 
     /**
      * Create a ReflectionConstant for the specified $constantName.
@@ -49,7 +50,7 @@ interface Reflector
     /**
      * Get all the constants available in the scope specified by the SourceLocator.
      *
-     * @return list<ReflectionConstant>
+     * @return Generator<ReflectionConstant>
      */
-    public function reflectAllConstants(): iterable;
+    public function reflectAllConstants(): Generator;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Roave\BetterReflection\Identifier\Identifier;
@@ -55,11 +56,8 @@ class DirectoriesSourceLocator implements SourceLocator
         return $this->aggregateSourceLocator->locateIdentifier($reflector, $identifier);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator
     {
-        return $this->aggregateSourceLocator->locateIdentifiersByType($reflector, $identifierType);
+        yield from $this->aggregateSourceLocator->locateIdentifiersByType($reflector, $identifierType);
     }
 }

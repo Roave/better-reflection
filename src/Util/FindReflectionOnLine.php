@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\Util;
 
+use Generator;
 use InvalidArgumentException;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
@@ -18,8 +19,6 @@ use Roave\BetterReflection\SourceLocator\Exception\InvalidFileLocation;
 use Roave\BetterReflection\SourceLocator\Type\AggregateSourceLocator;
 use Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator;
 use Roave\BetterReflection\SourceLocator\Type\SourceLocator;
-
-use function array_merge;
 
 final class FindReflectionOnLine
 {
@@ -40,9 +39,9 @@ final class FindReflectionOnLine
      */
     public function __invoke(string $filename, int $lineNumber): ReflectionMethod|ReflectionClass|ReflectionFunction|ReflectionConstant|Reflection|null
     {
-        $reflections = $this->computeReflections($filename);
+        $reflectionsGenerator = $this->computeReflections($filename);
 
-        foreach ($reflections as $reflection) {
+        foreach ($reflectionsGenerator as $reflection) {
             if ($reflection instanceof ReflectionClass && $this->containsLine($reflection, $lineNumber)) {
                 foreach ($reflection->getMethods() as $method) {
                     if ($this->containsLine($method, $lineNumber)) {
@@ -70,20 +69,29 @@ final class FindReflectionOnLine
      *
      * @param non-empty-string $filename
      *
-     * @return list<Reflection>
+     * @return Generator<Reflection>
      *
      * @throws ParseToAstFailure
      * @throws InvalidFileLocation
      */
-    private function computeReflections(string $filename): array
+    private function computeReflections(string $filename): Generator
     {
         $singleFileSourceLocator = new SingleFileSourceLocator($filename, $this->astLocator);
         $reflector               = new DefaultReflector(new AggregateSourceLocator([$singleFileSourceLocator, $this->sourceLocator]));
 
-        return array_merge(
-            $singleFileSourceLocator->locateIdentifiersByType($reflector, new IdentifierType(IdentifierType::IDENTIFIER_CLASS)),
-            $singleFileSourceLocator->locateIdentifiersByType($reflector, new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION)),
-            $singleFileSourceLocator->locateIdentifiersByType($reflector, new IdentifierType(IdentifierType::IDENTIFIER_CONSTANT)),
+        yield from $singleFileSourceLocator->locateIdentifiersByType(
+            $reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
+        );
+
+        yield from $singleFileSourceLocator->locateIdentifiersByType(
+            $reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+        );
+
+        yield from $singleFileSourceLocator->locateIdentifiersByType(
+            $reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_CONSTANT),
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
@@ -26,7 +27,7 @@ interface SourceLocator
     /**
      * Find all identifiers of a type
      *
-     * @return list<Reflection>
+     * @return Generator<Reflection>
      */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array;
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator;
 }

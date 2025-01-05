@@ -1153,7 +1153,13 @@ PHP;
             $this->astLocator,
         ));
 
-        $allClassesInfo = $reflector->reflectAllClasses();
+        $generator = $reflector->reflectAllClasses();
+
+        $allClassesInfo = [];
+        foreach ($generator as $reflectionClass) {
+            $allClassesInfo[] = $reflectionClass;
+        }
+
         self::assertCount(1, $allClassesInfo);
 
         $classInfo = $allClassesInfo[0];
@@ -1171,14 +1177,17 @@ PHP;
         ));
 
         $allClassesInfo = $reflector->reflectAllClasses();
-        self::assertCount(2, $allClassesInfo);
 
+        $count = 0;
         foreach ($allClassesInfo as $classInfo) {
             self::assertTrue($classInfo->isAnonymous());
             self::assertFalse($classInfo->inNamespace());
             self::assertStringStartsWith(ReflectionClass::ANONYMOUS_CLASS_NAME_PREFIX, $classInfo->getName());
             self::assertStringMatchesFormat('%sFixture/AnonymousClassInNamespace.php(%d)', $classInfo->getName());
+            ++$count;
         }
+
+        self::assertSame(2, $count);
     }
 
     public function testIsAnonymousWithNestedAnonymousClasses(): void
@@ -1189,14 +1198,17 @@ PHP;
         ));
 
         $allClassesInfo = $reflector->reflectAllClasses();
-        self::assertCount(3, $allClassesInfo);
 
+        $count = 0;
         foreach ($allClassesInfo as $classInfo) {
             self::assertTrue($classInfo->isAnonymous());
             self::assertFalse($classInfo->inNamespace());
             self::assertStringStartsWith(ReflectionClass::ANONYMOUS_CLASS_NAME_PREFIX, $classInfo->getName());
             self::assertStringMatchesFormat('%sFixture/NestedAnonymousClassInstances.php(%d)', $classInfo->getName());
+            ++$count;
         }
+
+        self::assertSame(3, $count);
     }
 
     public function testAnonymousClassWithParent(): void
@@ -1206,7 +1218,11 @@ PHP;
             $this->astLocator,
         ));
 
-        $allClassesInfo = $reflector->reflectAllClasses();
+        $allClassesInfo = [];
+        foreach ($reflector->reflectAllClasses() as $classInfo) {
+            $allClassesInfo[] = $classInfo;
+        }
+
         self::assertCount(3, $allClassesInfo);
 
         $classInfo = $allClassesInfo[2];
@@ -1227,7 +1243,13 @@ PHP;
             $this->astLocator,
         ));
 
-        $allClassesInfo = $reflector->reflectAllClasses();
+        $generator = $reflector->reflectAllClasses();
+
+        $allClassesInfo = [];
+        foreach ($generator as $reflectionClass) {
+            $allClassesInfo[] = $reflectionClass;
+        }
+
         self::assertCount(2, $allClassesInfo);
 
         $classInfo = $allClassesInfo[0];
@@ -1244,7 +1266,13 @@ PHP;
             $this->astLocator,
         ));
 
-        $allClassesInfo = $reflector->reflectAllClasses();
+        $generator = $reflector->reflectAllClasses();
+
+        $allClassesInfo = [];
+        foreach ($generator as $reflectionClass) {
+            $allClassesInfo[] = $reflectionClass;
+        }
+
         self::assertCount(3, $allClassesInfo);
 
         $classInfo = $allClassesInfo[2];
@@ -1266,7 +1294,13 @@ PHP;
 
         $reflector = new DefaultReflector(new StringSourceLocator($php, $this->astLocator));
 
-        $allClassesInfo = $reflector->reflectAllClasses();
+        $generator = $reflector->reflectAllClasses();
+
+        $allClassesInfo = [];
+        foreach ($generator as $reflectionClass) {
+            $allClassesInfo[] = $reflectionClass;
+        }
+
         self::assertCount(1, $allClassesInfo);
 
         $classInfo = $allClassesInfo[0];

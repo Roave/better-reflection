@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\Reflector;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\ReflectionClass;
@@ -43,11 +44,11 @@ final class DefaultReflector implements Reflector
     /**
      * Get all the classes available in the scope specified by the SourceLocator.
      *
-     * @return list<ReflectionClass>
+     * @return Generator<ReflectionClass>
      */
-    public function reflectAllClasses(): iterable
+    public function reflectAllClasses(): Generator
     {
-        /** @var list<ReflectionClass> $allClasses */
+        /** @var Generator<ReflectionClass> $allClasses */
         $allClasses = $this->sourceLocator->locateIdentifiersByType(
             $this,
             new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
@@ -79,11 +80,11 @@ final class DefaultReflector implements Reflector
     /**
      * Get all the functions available in the scope specified by the SourceLocator.
      *
-     * @return list<ReflectionFunction>
+     * @return Generator<ReflectionFunction>
      */
-    public function reflectAllFunctions(): iterable
+    public function reflectAllFunctions(): Generator
     {
-        /** @var list<ReflectionFunction> $allFunctions */
+        /** @var Generator<ReflectionFunction> $allFunctions */
         $allFunctions = $this->sourceLocator->locateIdentifiersByType(
             $this,
             new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
@@ -115,11 +116,11 @@ final class DefaultReflector implements Reflector
     /**
      * Get all the constants available in the scope specified by the SourceLocator.
      *
-     * @return list<ReflectionConstant>
+     * @return Generator<ReflectionConstant>
      */
-    public function reflectAllConstants(): iterable
+    public function reflectAllConstants(): Generator
     {
-        /** @var list<ReflectionConstant> $allConstants */
+        /** @var Generator<ReflectionConstant> $allConstants */
         $allConstants = $this->sourceLocator->locateIdentifiersByType(
             $this,
             new IdentifierType(IdentifierType::IDENTIFIER_CONSTANT),

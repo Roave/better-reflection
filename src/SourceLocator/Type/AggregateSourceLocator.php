@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
 use Roave\BetterReflection\Reflector\Reflector;
-
-use function array_map;
-use function array_merge;
 
 class AggregateSourceLocator implements SourceLocator
 {
@@ -32,14 +30,10 @@ class AggregateSourceLocator implements SourceLocator
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator
     {
-        return array_merge(
-            [],
-            ...array_map(static fn (SourceLocator $sourceLocator): array => $sourceLocator->locateIdentifiersByType($reflector, $identifierType), $this->sourceLocators),
-        );
+        foreach ($this->sourceLocators as $sourceLocator) {
+            yield from $sourceLocator->locateIdentifiersByType($reflector, $identifierType);
+        }
     }
 }
