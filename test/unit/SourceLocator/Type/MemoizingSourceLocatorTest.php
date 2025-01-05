@@ -21,6 +21,7 @@ use function array_merge;
 use function array_unique;
 use function count;
 use function in_array;
+use function iterator_count;
 use function random_int;
 use function range;
 use function spl_object_id;
@@ -195,6 +196,36 @@ class MemoizingSourceLocatorTest extends TestCase
                 $reflections2,
             );
         }
+    }
+
+    public function testNotCompletedMemoization(): void
+    {
+        $this
+            ->wrappedLocator
+            ->expects($this->exactly(2))
+            ->method('locateIdentifiersByType')
+            ->with($this->reflector1)
+            ->willReturnCallback(function (): Generator {
+                yield from [
+                    $this->createMock(Reflection::class),
+                    $this->createMock(Reflection::class),
+                    $this->createMock(Reflection::class),
+                ];
+            });
+
+        $classType = new IdentifierType(IdentifierType::IDENTIFIER_CLASS);
+
+        $generator = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $classType);
+
+        // Started iterating but did not complete the operation
+        $generator->next();
+
+        // The cache will not be saved until we have completed all iterations
+        $generator2 = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $classType);
+        $this->assertSame(3, iterator_count($generator2));
+
+        $generator3 = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $classType);
+        $this->assertSame(3, iterator_count($generator3));
     }
 
     /**

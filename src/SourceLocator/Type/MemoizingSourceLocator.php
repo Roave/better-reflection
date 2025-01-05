@@ -49,10 +49,12 @@ final class MemoizingSourceLocator implements SourceLocator
             return;
         }
 
+        $items = [];
         foreach ($this->wrappedSourceLocator->locateIdentifiersByType($reflector, $identifierType) as $item) {
-            yield $this->cacheByIdentifierTypeKeyAndOid[$cacheKey][] = $item;
+            yield $items[] = $item;
         }
-        //todo
+
+        $this->cacheByIdentifierTypeKeyAndOid[$cacheKey] = $items;
     }
 
     private function reflectorCacheKey(Reflector $reflector): string
