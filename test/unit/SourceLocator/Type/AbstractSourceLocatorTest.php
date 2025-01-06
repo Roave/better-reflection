@@ -14,6 +14,7 @@ use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Ast\Locator as AstLocator;
 use Roave\BetterReflection\SourceLocator\Located\LocatedSource;
 use Roave\BetterReflection\SourceLocator\Type\AbstractSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceContainsFilter;
 
 #[CoversClass(AbstractSourceLocator::class)]
 class AbstractSourceLocatorTest extends TestCase
@@ -129,6 +130,93 @@ class AbstractSourceLocatorTest extends TestCase
         self::assertSame([$mockReflection], $sourceLocator->locateIdentifiersByType($mockReflector, $identifierType));
     }
 
+    public function testIterateIdentifiersByTypeCallsFindReflectionsOfType(): void
+    {
+        $mockReflector = $this->createMock(Reflector::class);
+
+        $locatedSource = new LocatedSource('<?php class Foo{}', 'Foo');
+
+        $identifierType = new IdentifierType(IdentifierType::IDENTIFIER_CLASS);
+
+        $mockReflection = $this->createMock(ReflectionClass::class);
+
+        $astLocator = $this->createMock(AstLocator::class);
+
+        $astLocator->expects($this->once())
+            ->method('findReflectionsOfType')
+            ->with($mockReflector, $locatedSource, $identifierType)
+            ->willReturn([$mockReflection]);
+
+        $sourceLocator = $this->getMockBuilder(AbstractSourceLocator::class)
+            ->setConstructorArgs([$astLocator])
+            ->onlyMethods(['createLocatedSource'])
+            ->getMock();
+
+        $sourceLocator->expects($this->once())
+            ->method('createLocatedSource')
+            ->willReturn($locatedSource);
+
+        $result = [];
+        foreach ($sourceLocator->iterateIdentifiersByType($mockReflector, $identifierType, null) as $identifier) {
+            $result[] = $identifier;
+        }
+
+        self::assertSame([$mockReflection], $result);
+    }
+
+    public function testIterateIdentifiersByTypeWithFilter(): void
+    {
+        $mockReflector = $this->createMock(Reflector::class);
+
+        $locatedSource = new LocatedSource('<?php class Foo{}', 'Foo');
+
+        $identifierType = new IdentifierType(IdentifierType::IDENTIFIER_CLASS);
+
+        $mockReflection = $this->createMock(ReflectionClass::class);
+
+        $astLocator = $this->createMock(AstLocator::class);
+
+        $astLocator->expects($this->once())
+            ->method('findReflectionsOfType')
+            ->with($mockReflector, $locatedSource, $identifierType)
+            ->willReturn([$mockReflection]);
+
+        $sourceLocator = $this->getMockBuilder(AbstractSourceLocator::class)
+            ->setConstructorArgs([$astLocator])
+            ->onlyMethods(['createLocatedSource'])
+            ->getMock();
+
+        $sourceLocator->expects($this->exactly(2))
+            ->method('createLocatedSource')
+            ->willReturn($locatedSource);
+
+        $result = [];
+        foreach (
+            $sourceLocator->iterateIdentifiersByType(
+                $mockReflector,
+                $identifierType,
+                new SourceContainsFilter(['1111']),
+            ) as $identifier
+        ) {
+            $result[] = $identifier;
+        }
+
+        self::assertSame([], $result);
+
+        $result = [];
+        foreach (
+            $sourceLocator->iterateIdentifiersByType(
+                $mockReflector,
+                $identifierType,
+                new SourceContainsFilter(['Foo']),
+            ) as $identifier
+        ) {
+            $result[] = $identifier;
+        }
+
+        self::assertSame([$mockReflection], $result);
+    }
+
     public function testLocateIdentifiersByTypeReturnsEmptyArrayWithoutTryingToFindReflectionsWhenUnableToLocateSource(): void
     {
         $mockReflector = $this->createMock(Reflector::class);
@@ -150,5 +238,33 @@ class AbstractSourceLocatorTest extends TestCase
             ->willReturn(null);
 
         self::assertSame([], $sourceLocator->locateIdentifiersByType($mockReflector, $identifierType));
+    }
+
+    public function testIterateIdentifiersByTypeReturnsEmptyArrayWithoutTryingToFindReflectionsWhenUnableToLocateSource(): void
+    {
+        $mockReflector = $this->createMock(Reflector::class);
+
+        $identifierType = new IdentifierType(IdentifierType::IDENTIFIER_CLASS);
+
+        $astLocator = $this->createMock(AstLocator::class);
+
+        $astLocator->expects($this->never())
+            ->method('findReflectionsOfType');
+
+        $sourceLocator = $this->getMockBuilder(AbstractSourceLocator::class)
+            ->setConstructorArgs([$astLocator])
+            ->onlyMethods(['createLocatedSource'])
+            ->getMock();
+
+        $sourceLocator->expects($this->once())
+            ->method('createLocatedSource')
+            ->willReturn(null);
+
+        $result = [];
+        foreach ($sourceLocator->iterateIdentifiersByType($mockReflector, $identifierType, null) as $identifier) {
+            $result[] = $identifier;
+        }
+
+        self::assertSame([], $result);
     }
 }

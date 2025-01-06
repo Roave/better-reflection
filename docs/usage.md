@@ -1,16 +1,16 @@
 # Basic Usage
 
-The starting point for creating a reflection class does not match the typical core reflection API. Instead of 
-instantiating a `new \ReflectionClass`, you must use the appropriate `\Roave\BetterReflection\Reflector\Reflector` 
+The starting point for creating a reflection class does not match the typical core reflection API. Instead of
+instantiating a `new \ReflectionClass`, you must use the appropriate `\Roave\BetterReflection\Reflector\Reflector`
 helper.
 
 All `*Reflector` classes require a class that implements the `SourceLocator` interface as a dependency.
 
 ## Basic Reflection
 
-Better Reflection is, in most cases, able to automatically reflect on classes by using a similar creation technique to 
+Better Reflection is, in most cases, able to automatically reflect on classes by using a similar creation technique to
 PHP's internal reflection. However, this works on the basic assumption that whichever autoloader you are using will
-attempt to load a file, and only one file, which should contain the class you are trying to reflect. For example, the 
+attempt to load a file, and only one file, which should contain the class you are trying to reflect. For example, the
 autoloader that Composer provides will work with this technique.
 
 ```php
@@ -23,10 +23,10 @@ $classInfo = (new BetterReflection)
     ->reflectClass(\Foo\Bar\MyClass::class);
 ```
 
-If this instantiation technique is not possible - for example, your autoloader does not load classes from file, then 
+If this instantiation technique is not possible - for example, your autoloader does not load classes from file, then
 you *must* use `SourceLocator` creation.
 
-> Fun fact... using the method described above actually uses a SourceLocator under the hood - it uses the 
+> Fun fact... using the method described above actually uses a SourceLocator under the hood - it uses the
   `AutoloadSourceLocator`.
 
 ### Initialisers
@@ -60,20 +60,20 @@ ReflectionProperty::createFromInstance(new \ReflectionClass(\stdClass::class), '
 
 ## SourceLocators
 
-Source locators are helpers that identify how to load code that can be used within the `Reflector`s. The library comes 
+Source locators are helpers that identify how to load code that can be used within the `Reflector`s. The library comes
 bundled with the following `SourceLocator` classes:
 
- * `ComposerSourceLocator` - you'll probably use this most of the time. This uses Composer's built-in autoloader to 
+ * `ComposerSourceLocator` - you'll probably use this most of the time. This uses Composer's built-in autoloader to
    locate a class and return the source.
-    
+
  * `SingleFileSourceLocator` - this locator loads the filename specified in the constructor.
-    
- * `StringSourceLocator` - pass a string as a constructor argument which will be used directly. Note that any 
+
+ * `StringSourceLocator` - pass a string as a constructor argument which will be used directly. Note that any
    references to filenames when using this locator will be `null` because no files are loaded.
 
- * `AutoloadSourceLocator` - this is a little hacky, but works on the assumption that when a registered autoloader 
+ * `AutoloadSourceLocator` - this is a little hacky, but works on the assumption that when a registered autoloader
   identifies a file and attempts to open it, then that file will contain the class. Internally, it works by overriding
-  the `file://` protocol stream wrapper to grab the path of the file the autoloader is trying to locate. This source 
+  the `file://` protocol stream wrapper to grab the path of the file the autoloader is trying to locate. This source
   locator is used internally by the `ReflectionClass::createFromName` static constructor.
 
  * `EvaledCodeSourceLocator` - used to perform reflection on code that is already loaded into memory using `eval()`
@@ -84,7 +84,7 @@ bundled with the following `SourceLocator` classes:
 
  * `ClosureSourceLocator` - used to perform reflection on a closure.
 
- * `AggregateSourceLocator` - a combination of multiple `SourceLocator`s which are hunted through in the given order to 
+ * `AggregateSourceLocator` - a combination of multiple `SourceLocator`s which are hunted through in the given order to
    locate the source.
 
  * `FileIteratorSourceLocator` - iterates all files in a given iterator containing `SplFileInfo` instances.
@@ -94,7 +94,7 @@ bundled with the following `SourceLocator` classes:
 A `SourceLocator` is a callable, which when invoked must be given an `Identifier` (which describes a class/function/etc)
 . The `SourceLocator` should be written so that it returns a `Reflection` object directly.
 
-> Note that using `EvaledCodeSourceLocator` and `PhpInternalSourceLocator` will result in specific types of 
+> Note that using `EvaledCodeSourceLocator` and `PhpInternalSourceLocator` will result in specific types of
   `LocatedSource` within the reflection - namely `EvaledLocatedSource` and `InternalLocatedSource` respectively.
 
 > Note that if you use a locator other than the default and the class you want to reflect extends a built-in PHP class (e.g. `\Exception`)
@@ -103,12 +103,12 @@ A `SourceLocator` is a callable, which when invoked must be given an `Identifier
 
 ## Reflecting Classes
 
-The `Reflector` is used to create Better Reflection `ReflectionClass` instances. You may pass it any 
+The `Reflector` is used to create Better Reflection `ReflectionClass` instances. You may pass it any
 `SourceLocator` to reflect on any class that can be located using the given that `SourceLocator`.
 
 ### Using the AutoloadSourceLocator
 
-There is no need to use the `AutoloadSourceLocator` directly. Use the static constructors for `ReflectionClass` 
+There is no need to use the `AutoloadSourceLocator` directly. Use the static constructors for `ReflectionClass`
 and `ReflectionFunction`:
 
 ```php
@@ -237,10 +237,31 @@ $reflector = new DefaultReflector($directoriesSourceLocator);
 $classes = $reflector->reflectAllClasses();
 ```
 
+### Iterate filtered reflections in a directory
+
+```php
+<?php
+
+use Roave\BetterReflection\BetterReflection;
+use Roave\BetterReflection\Reflector\DefaultReflector;
+use Roave\BetterReflection\SourceLocator\Type\DirectoriesSourceLocator;
+
+$astLocator = (new BetterReflection())->astLocator();
+
+$directoriesSourceLocator = new DirectoriesSourceLocator(['path/to/directory1'], $astLocator);
+
+$reflector = new DefaultReflector($directoriesSourceLocator);
+
+$generator = $reflector->iterateClasses(new SourceContainsFilter(['some substring']));
+
+foreach ($generator as $reflection) {
+    $reflection->getName();
+}
+```
 
 ## Reflecting Functions
 
-The `Reflector` is used to create Better Reflection `ReflectionFunction` instances. You may pass it any 
+The `Reflector` is used to create Better Reflection `ReflectionFunction` instances. You may pass it any
 `SourceLocator` to reflect on any class that can be located using the given `SourceLocator`.
 
 ### Using the AutoloadSourceLocator
@@ -277,5 +298,5 @@ $myClosure = function () {
 $functionInfo = ReflectionFunction::createFromClosure($myClosure);
 ```
 
-> Note that when you reflect on a closure, in order to match the core reflection API, the function "short" name will be 
+> Note that when you reflect on a closure, in order to match the core reflection API, the function "short" name will be
   just `{closure}`.

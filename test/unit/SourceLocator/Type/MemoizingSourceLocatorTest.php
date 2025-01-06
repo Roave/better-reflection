@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
+use Generator;
+use Iterator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +14,7 @@ use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
 use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Type\MemoizingSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 use Roave\BetterReflection\SourceLocator\Type\SourceLocator;
 
 use function array_filter;
@@ -160,6 +163,80 @@ class MemoizingSourceLocatorTest extends TestCase
             self::assertSame(
                 $symbols2[$type->getName()],
                 $this->memoizingLocator->locateIdentifiersByType($this->reflector2, $type),
+            );
+        }
+    }
+
+    public function testMemoizationIterator(): void
+    {
+        $types    = [
+            new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+            new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
+        ];
+        $symbols1 = [
+            IdentifierType::IDENTIFIER_FUNCTION => [$this->createMock(Reflection::class)],
+            IdentifierType::IDENTIFIER_CLASS    => [$this->createMock(Reflection::class)],
+        ];
+        $symbols2 = [
+            IdentifierType::IDENTIFIER_FUNCTION => [$this->createMock(Reflection::class)],
+            IdentifierType::IDENTIFIER_CLASS    => [$this->createMock(Reflection::class)],
+        ];
+
+        $this
+            ->wrappedLocator
+            ->expects($this->exactly(6))
+            ->method('iterateIdentifiersByType')
+            ->with(self::logicalOr($this->reflector1, $this->reflector2))
+            ->willReturnCallback(function (
+                Reflector $reflector,
+                IdentifierType $identifierType,
+            ) use (
+                $symbols1,
+                $symbols2,
+            ): Generator {
+                if ($reflector === $this->reflector1) {
+                    yield from $symbols1[$identifierType->getName()];
+                    return;
+                }
+
+                yield from $symbols2[$identifierType->getName()];
+            });
+
+        $sourceFilterMock = $this->createMock(SourceFilter::class);
+        $sourceFilterMock->expects($this->exactly(4))->method('getKey')->willReturn('test');
+
+        foreach ($types as $type) {
+            $iterator1 = $this->memoizingLocator->iterateIdentifiersByType($this->reflector1, $type, null);
+            self::assertSame(
+                $symbols1[$type->getName()],
+                iterator_to_array($iterator1),
+            );
+            $iterator2 = $this->memoizingLocator->iterateIdentifiersByType($this->reflector2, $type, null);
+            self::assertSame(
+                $symbols2[$type->getName()],
+                iterator_to_array($iterator2),
+            );
+            $iterator3 = $this->memoizingLocator->iterateIdentifiersByType($this->reflector2, $type, $sourceFilterMock);
+            self::assertSame(
+                $symbols2[$type->getName()],
+                iterator_to_array($iterator3),
+            );
+
+            // second execution - ensures that memoization is in place
+            $iterator1 = $this->memoizingLocator->iterateIdentifiersByType($this->reflector1, $type, null);
+            self::assertSame(
+                $symbols1[$type->getName()],
+                iterator_to_array($iterator1),
+            );
+            $iterator2 = $this->memoizingLocator->iterateIdentifiersByType($this->reflector2, $type, null);
+            self::assertSame(
+                $symbols2[$type->getName()],
+                iterator_to_array($iterator2),
+            );
+            $iterator3 = $this->memoizingLocator->iterateIdentifiersByType($this->reflector2, $type, $sourceFilterMock);
+            self::assertSame(
+                $symbols2[$type->getName()],
+                iterator_to_array($iterator3),
             );
         }
     }

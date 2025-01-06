@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Roave\BetterReflection\SourceLocator\Type;
 
 use Closure;
+use Generator;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeTraverser;
@@ -24,6 +25,7 @@ use Roave\BetterReflection\SourceLocator\Exception\NoClosureOnLine;
 use Roave\BetterReflection\SourceLocator\Exception\TwoClosuresOnSameLine;
 use Roave\BetterReflection\SourceLocator\FileChecker;
 use Roave\BetterReflection\SourceLocator\Located\AnonymousLocatedSource;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 use Roave\BetterReflection\Util\FileHelper;
 
 use function array_filter;
@@ -59,6 +61,35 @@ final class ClosureSourceLocator implements SourceLocator
     public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
     {
         return array_filter([$this->getReflectionFunction($reflector, $identifierType)]);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ParseToAstFailure
+     */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter
+    ): Generator {
+        $reflection = $this->getReflectionFunction($reflector, $identifierType);
+        if (! $reflection) {
+            return;
+        }
+
+        $locatedSource = $reflection->getLocatedSource();
+        $isAllowed = $sourceFilter?->isAllowed(
+            $locatedSource->getSource(),
+            $locatedSource->getName(),
+            $locatedSource->getFileName(),
+        );
+
+        if ($isAllowed === false) {
+            return ;
+        }
+
+        yield $reflection;
     }
 
     private function getReflectionFunction(Reflector $reflector, IdentifierType $identifierType): ReflectionFunction|null

@@ -144,6 +144,21 @@ class AnonymousClassObjectSourceLocatorTest extends TestCase
         self::assertCount(0, $reflections);
     }
 
+    public function testIterateIdentifiersByTypeWithFunctionIdentifier(): void
+    {
+        $anonymousClass = new class {
+        };
+
+        /** @var list<ReflectionClass> $reflections */
+        $reflections = (new AnonymousClassObjectSourceLocator($anonymousClass, $this->parser))->iterateIdentifiersByType(
+            $this->reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+            null,
+        );
+
+        self::assertSame(0, iterator_count($reflections));
+    }
+
     public function testExceptionIfAnonymousClassNotFoundOnExpectedLine(): void
     {
         $anonymousClass = new class {

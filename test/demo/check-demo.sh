@@ -20,3 +20,4 @@ check demo/basic-reflection/example2.php $'Roave\BetterReflection\Reflection\Ref
 check demo/basic-reflection/example3.php $'MyClass\nprivate'
 check demo/parsing-whole-directory/example1.php $'success'
 check demo/parsing-whole-directory/example2.php $'success'
+check demo/parsing-whole-directory/example3.php $'51'

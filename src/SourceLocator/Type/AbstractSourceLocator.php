@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
@@ -12,6 +13,7 @@ use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Ast\Exception\ParseToAstFailure;
 use Roave\BetterReflection\SourceLocator\Ast\Locator as AstLocator;
 use Roave\BetterReflection\SourceLocator\Located\LocatedSource;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceFilter;
 
 abstract class AbstractSourceLocator implements SourceLocator
 {
@@ -63,6 +65,33 @@ abstract class AbstractSourceLocator implements SourceLocator
         }
 
         return $this->astLocator->findReflectionsOfType(
+            $reflector,
+            $locatedSource,
+            $identifierType,
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws ParseToAstFailure
+     */
+    public function iterateIdentifiersByType(
+        Reflector $reflector,
+        IdentifierType $identifierType,
+        ?SourceFilter $sourceFilter,
+    ): Generator {
+        $locatedSource = $this->createLocatedSource(new Identifier(Identifier::WILDCARD, $identifierType));
+
+        if (!$locatedSource || $sourceFilter?->isAllowed(
+                $locatedSource->getSource(),
+                $locatedSource->getName(),
+                $locatedSource->getFileName(),
+            ) === false) {
+            return;
+        }
+
+        yield from $this->astLocator->findReflectionsOfType(
             $reflector,
             $locatedSource,
             $identifierType,

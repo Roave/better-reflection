@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
 use Closure;
+use Generator;
 use PhpParser\Parser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,6 +22,7 @@ use Roave\BetterReflection\SourceLocator\Exception\InvalidFileLocation;
 use Roave\BetterReflection\SourceLocator\Exception\NoClosureOnLine;
 use Roave\BetterReflection\SourceLocator\Exception\TwoClosuresOnSameLine;
 use Roave\BetterReflection\SourceLocator\Type\ClosureSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\SourceFilter\SourceContainsFilter;
 use Roave\BetterReflection\Util\FileHelper;
 use Roave\BetterReflectionTest\BetterReflectionSingleton;
 
@@ -123,6 +125,56 @@ class ClosureSourceLocatorTest extends TestCase
         self::assertStringContainsString('Hello world!', $reflections[0]->getLocatedSource()->getSource());
     }
 
+    #[DataProvider('closuresProvider')]
+    public function testIterateIdentifiersByType(Closure $closure, string|null $namespace, string $file, int $startLine, int $endLine): void
+    {
+        /** @var Generator<ReflectionFunction> $generator */
+        $generator = (new ClosureSourceLocator($closure, $this->parser))->iterateIdentifiersByType(
+            $this->reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+            null,
+        );
+
+        $reflections = [];
+        foreach ($generator as $reflection) {
+            $reflections[] = $reflection;
+        }
+
+        self::assertCount(1, $reflections);
+        self::assertArrayHasKey(0, $reflections);
+
+        self::assertTrue($reflections[0]->isClosure());
+        self::assertSame(ReflectionFunction::CLOSURE_NAME, $reflections[0]->getShortName());
+        self::assertSame($namespace, $reflections[0]->getNamespaceName());
+        self::assertSame($file, $reflections[0]->getFileName());
+        self::assertSame($startLine, $reflections[0]->getStartLine());
+        self::assertSame($endLine, $reflections[0]->getEndLine());
+        self::assertStringContainsString('Hello world!', $reflections[0]->getLocatedSource()->getSource());
+    }
+
+    public function testIterateIdentifiersByTypeWithFilter(): void
+    {
+        $closure = require FileHelper::normalizeWindowsPath(self::realPath(__DIR__ . '/../../Fixture/ClosureInNamespace.php'));
+
+        /** @var Generator<ReflectionFunction> $generator */
+        $generator = (new ClosureSourceLocator($closure, $this->parser))->iterateIdentifiersByType(
+            $this->reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+            new SourceContainsFilter(['Hello world!']),
+        );
+
+        self::assertSame(1, iterator_count($generator));
+
+        /** @var Generator<ReflectionFunction> $generator2 */
+        $generator2 = (new ClosureSourceLocator($closure, $this->parser))->iterateIdentifiersByType(
+            $this->reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
+            new SourceContainsFilter(['iiiii']),
+        );
+
+        self::assertSame(0, iterator_count($generator2));
+    }
+
     public function testExceptionIfClosureNotFoundOnExpectedLine(): void
     {
         $closure = static function (): void {
@@ -161,6 +213,21 @@ class ClosureSourceLocatorTest extends TestCase
         );
 
         self::assertCount(0, $reflections);
+    }
+
+    public function testIterateIdentifiersByTypeWithClassIdentifier(): void
+    {
+        $closure = static function (): void {
+        };
+
+        /** @var list<ReflectionFunction> $reflections */
+        $reflections = (new ClosureSourceLocator($closure, $this->parser))->iterateIdentifiersByType(
+            $this->reflector,
+            new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
+            null,
+        );
+
+        self::assertSame(0, iterator_count($reflections));
     }
 
     /** @return list<array{0: string, 1: Closure}> */
