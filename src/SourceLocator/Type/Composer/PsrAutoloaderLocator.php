@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type\Composer;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
@@ -54,11 +55,11 @@ final class PsrAutoloaderLocator implements SourceLocator
     /**
      * Find all identifiers of a type
      *
-     * @return list<Reflection>
+     * @return Generator<Reflection>
      */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator
     {
-        return (new DirectoriesSourceLocator(
+        yield from (new DirectoriesSourceLocator(
             $this->mapping->directories(),
             $this->astLocator,
         ))->locateIdentifiersByType($reflector, $identifierType);

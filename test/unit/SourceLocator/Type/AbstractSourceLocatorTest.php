@@ -15,6 +15,9 @@ use Roave\BetterReflection\SourceLocator\Ast\Locator as AstLocator;
 use Roave\BetterReflection\SourceLocator\Located\LocatedSource;
 use Roave\BetterReflection\SourceLocator\Type\AbstractSourceLocator;
 
+use function iterator_count;
+use function iterator_to_array;
+
 #[CoversClass(AbstractSourceLocator::class)]
 class AbstractSourceLocatorTest extends TestCase
 {
@@ -126,7 +129,9 @@ class AbstractSourceLocatorTest extends TestCase
             ->method('createLocatedSource')
             ->willReturn($locatedSource);
 
-        self::assertSame([$mockReflection], $sourceLocator->locateIdentifiersByType($mockReflector, $identifierType));
+        $generator = $sourceLocator->locateIdentifiersByType($mockReflector, $identifierType);
+
+        self::assertSame([$mockReflection], iterator_to_array($generator));
     }
 
     public function testLocateIdentifiersByTypeReturnsEmptyArrayWithoutTryingToFindReflectionsWhenUnableToLocateSource(): void
@@ -149,6 +154,8 @@ class AbstractSourceLocatorTest extends TestCase
             ->method('createLocatedSource')
             ->willReturn(null);
 
-        self::assertSame([], $sourceLocator->locateIdentifiersByType($mockReflector, $identifierType));
+        $generator = $sourceLocator->locateIdentifiersByType($mockReflector, $identifierType);
+
+        self::assertSame(0, iterator_count($generator));
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Roave\BetterReflection\SourceLocator\Type;
 
 use Closure;
+use Generator;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeTraverser;
@@ -26,7 +27,6 @@ use Roave\BetterReflection\SourceLocator\FileChecker;
 use Roave\BetterReflection\SourceLocator\Located\AnonymousLocatedSource;
 use Roave\BetterReflection\Util\FileHelper;
 
-use function array_filter;
 use function assert;
 use function file_get_contents;
 use function str_contains;
@@ -56,9 +56,14 @@ final class ClosureSourceLocator implements SourceLocator
      *
      * @throws ParseToAstFailure
      */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator
     {
-        return array_filter([$this->getReflectionFunction($reflector, $identifierType)]);
+        $reflection = $this->getReflectionFunction($reflector, $identifierType);
+        if (! $reflection) {
+            return;
+        }
+
+        yield $reflection;
     }
 
     private function getReflectionFunction(Reflector $reflector, IdentifierType $identifierType): ReflectionFunction|null

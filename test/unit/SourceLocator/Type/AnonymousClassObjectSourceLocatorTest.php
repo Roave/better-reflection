@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
+use Generator;
 use PhpParser\Parser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -25,6 +26,7 @@ use stdClass;
 
 use function assert;
 use function is_string;
+use function iterator_count;
 use function realpath;
 use function sprintf;
 
@@ -114,11 +116,16 @@ class AnonymousClassObjectSourceLocatorTest extends TestCase
     #[DataProvider('anonymousClassInstancesProvider')]
     public function testLocateIdentifiersByType(object $class, string $file, int $startLine, int $endLine): void
     {
-        /** @var list<ReflectionClass> $reflections */
-        $reflections = (new AnonymousClassObjectSourceLocator($class, $this->parser))->locateIdentifiersByType(
+        /** @var Generator<ReflectionClass> $generator */
+        $generator = (new AnonymousClassObjectSourceLocator($class, $this->parser))->locateIdentifiersByType(
             $this->reflector,
             new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
         );
+
+        $reflections = [];
+        foreach ($generator as $reflection) {
+            $reflections[] = $reflection;
+        }
 
         self::assertCount(1, $reflections);
         self::assertArrayHasKey(0, $reflections);
@@ -135,13 +142,13 @@ class AnonymousClassObjectSourceLocatorTest extends TestCase
         $anonymousClass = new class {
         };
 
-        /** @var list<ReflectionClass> $reflections */
+        /** @var Generator<ReflectionClass> $reflections */
         $reflections = (new AnonymousClassObjectSourceLocator($anonymousClass, $this->parser))->locateIdentifiersByType(
             $this->reflector,
             new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
         );
 
-        self::assertCount(0, $reflections);
+        self::assertSame(0, iterator_count($reflections));
     }
 
     public function testExceptionIfAnonymousClassNotFoundOnExpectedLine(): void
@@ -168,9 +175,12 @@ class AnonymousClassObjectSourceLocatorTest extends TestCase
         $coreReflectionPropertyInSourceLocatatorReflection->setAccessible(true);
         $coreReflectionPropertyInSourceLocatatorReflection->setValue($sourceLocator, $coreReflectionPropertyMock);
 
-        $this->expectException(NoAnonymousClassOnLine::class);
+        $generator = $sourceLocator->locateIdentifiersByType($this->reflector, new IdentifierType(IdentifierType::IDENTIFIER_CLASS));
 
-        $sourceLocator->locateIdentifiersByType($this->reflector, new IdentifierType(IdentifierType::IDENTIFIER_CLASS));
+        $this->expectException(NoAnonymousClassOnLine::class);
+        foreach ($generator as $reflection) {
+            continue;
+        }
     }
 
     /** @return list<array{0: string, 1: object}> */

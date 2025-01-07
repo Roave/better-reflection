@@ -9,7 +9,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
-use Roave\BetterReflection\Reflection\Reflection;
 use Roave\BetterReflection\Reflector\DefaultReflector;
 use Roave\BetterReflection\Reflector\Reflector;
 use Roave\BetterReflection\SourceLocator\Type\Composer\Psr\Psr4Mapping;
@@ -21,7 +20,6 @@ use Roave\BetterReflectionTest\Assets\DirectoryScannerAssetsFoo\Bar\FooBar as Fo
 use Roave\BetterReflectionTest\Assets\DirectoryScannerAssetsFoo\Foo as Foo1;
 use Roave\BetterReflectionTest\BetterReflectionSingleton;
 
-use function array_map;
 use function sort;
 
 #[CoversClass(PsrAutoloaderLocator::class)]
@@ -166,13 +164,15 @@ class PsrAutoloaderLocatorTest extends TestCase
             Foo1::class,
         ];
 
-        $actual = array_map(
-            static fn (Reflection $reflection): string => $reflection->getName(),
-            $locator->locateIdentifiersByType(
-                new DefaultReflector($locator),
-                new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
-            ),
+        $generator = $locator->locateIdentifiersByType(
+            new DefaultReflector($locator),
+            new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
         );
+
+        $actual = [];
+        foreach ($generator as $reflection) {
+            $actual[] = $reflection->getName();
+        }
 
         // Sorting may depend on filesystem here
         sort($expected);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
 use Closure;
+use Generator;
 use PhpParser\Parser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -26,6 +27,7 @@ use Roave\BetterReflectionTest\BetterReflectionSingleton;
 
 use function assert;
 use function is_string;
+use function iterator_count;
 use function realpath;
 use function sprintf;
 
@@ -105,11 +107,16 @@ class ClosureSourceLocatorTest extends TestCase
     #[DataProvider('closuresProvider')]
     public function testLocateIdentifiersByType(Closure $closure, string|null $namespace, string $file, int $startLine, int $endLine): void
     {
-        /** @var list<ReflectionFunction> $reflections */
-        $reflections = (new ClosureSourceLocator($closure, $this->parser))->locateIdentifiersByType(
+        /** @var Generator<ReflectionFunction> $generator */
+        $generator = (new ClosureSourceLocator($closure, $this->parser))->locateIdentifiersByType(
             $this->reflector,
             new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION),
         );
+
+        $reflections = [];
+        foreach ($generator as $reflection) {
+            $reflections[] = $reflection;
+        }
 
         self::assertCount(1, $reflections);
         self::assertArrayHasKey(0, $reflections);
@@ -144,9 +151,12 @@ class ClosureSourceLocatorTest extends TestCase
         $coreReflectionPropertyInSourceLocatatorReflection->setAccessible(true);
         $coreReflectionPropertyInSourceLocatatorReflection->setValue($sourceLocator, $coreReflectionPropertyMock);
 
-        $this->expectException(NoClosureOnLine::class);
+        $generator = $sourceLocator->locateIdentifiersByType($this->reflector, new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION));
 
-        $sourceLocator->locateIdentifiersByType($this->reflector, new IdentifierType(IdentifierType::IDENTIFIER_FUNCTION));
+        $this->expectException(NoClosureOnLine::class);
+        foreach ($generator as $reflection) {
+            continue;
+        }
     }
 
     public function testLocateIdentifiersByTypeWithClassIdentifier(): void
@@ -160,7 +170,7 @@ class ClosureSourceLocatorTest extends TestCase
             new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
         );
 
-        self::assertCount(0, $reflections);
+        self::assertSame(0, iterator_count($reflections));
     }
 
     /** @return list<array{0: string, 1: Closure}> */

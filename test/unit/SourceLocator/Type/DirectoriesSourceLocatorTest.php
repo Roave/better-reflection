@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +18,6 @@ use Roave\BetterReflectionTest\Assets\DirectoryScannerAssets;
 use Roave\BetterReflectionTest\Assets\DirectoryScannerAssetsFoo;
 use Roave\BetterReflectionTest\BetterReflectionSingleton;
 
-use function array_map;
 use function sort;
 use function uniqid;
 
@@ -41,18 +41,18 @@ class DirectoriesSourceLocatorTest extends TestCase
 
     public function testScanDirectoryClasses(): void
     {
-        /** @var list<ReflectionClass> $classes */
-        $classes = $this->sourceLocator->locateIdentifiersByType(
+        /** @var Generator<ReflectionClass> $generator */
+        $generator = $this->sourceLocator->locateIdentifiersByType(
             new DefaultReflector($this->sourceLocator),
             new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
         );
 
-        self::assertCount(4, $classes);
+        $classNames = [];
+        foreach ($generator as $reflectionClass) {
+            $classNames[] = $reflectionClass->getName();
+        }
 
-        $classNames = array_map(
-            static fn (ReflectionClass $reflectionClass): string => $reflectionClass->getName(),
-            $classes,
-        );
+        self::assertCount(4, $classNames);
 
         sort($classNames);
 

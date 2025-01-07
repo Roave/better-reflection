@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
 use ArrayIterator;
+use FilesystemIterator;
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -19,7 +21,6 @@ use Roave\BetterReflectionTest\Assets\DirectoryScannerAssets;
 use Roave\BetterReflectionTest\BetterReflectionSingleton;
 use stdClass;
 
-use function array_map;
 use function sort;
 
 #[CoversClass(FileIteratorSourceLocator::class)]
@@ -34,7 +35,7 @@ class FileIteratorSourceLocatorTest extends TestCase
         $this->sourceLocator = new FileIteratorSourceLocator(
             new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
                 __DIR__ . '/../../Assets/DirectoryScannerAssets',
-                RecursiveDirectoryIterator::SKIP_DOTS,
+                FilesystemIterator::SKIP_DOTS,
             ), RecursiveIteratorIterator::SELF_FIRST),
             BetterReflectionSingleton::instance()->astLocator(),
         );
@@ -42,18 +43,18 @@ class FileIteratorSourceLocatorTest extends TestCase
 
     public function testScanDirectoryClasses(): void
     {
-        /** @var list<ReflectionClass> $classes */
+        /** @var Generator<ReflectionClass> $classes */
         $classes = $this->sourceLocator->locateIdentifiersByType(
             new DefaultReflector($this->sourceLocator),
             new IdentifierType(IdentifierType::IDENTIFIER_CLASS),
         );
 
-        self::assertCount(2, $classes);
+        $classNames = [];
+        foreach ($classes as $reflectionClass) {
+            $classNames[] = $reflectionClass->getName();
+        }
 
-        $classNames = array_map(
-            static fn (ReflectionClass $reflectionClass): string => $reflectionClass->getName(),
-            $classes,
-        );
+        self::assertCount(2, $classNames);
 
         sort($classNames);
 

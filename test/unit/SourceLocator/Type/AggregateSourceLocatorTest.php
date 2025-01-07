@@ -110,19 +110,26 @@ class AggregateSourceLocatorTest extends TestCase
 
         $source3 = $this->createMock(ReflectionClass::class);
 
-        $locator1->expects($this->once())->method('locateIdentifiersByType')->willReturn([]);
-        $locator2->expects($this->once())->method('locateIdentifiersByType')->willReturn([$source2]);
-        $locator3->expects($this->once())->method('locateIdentifiersByType')->willReturn([$source3]);
-        $locator4->expects($this->once())->method('locateIdentifiersByType')->willReturn([]);
+        $locator1->expects($this->once())->method('locateIdentifiersByType')->willReturnCallback(static fn () => yield from []);
+        $locator2->expects($this->once())->method('locateIdentifiersByType')->willReturnCallback(static fn () => yield $source2);
+        $locator3->expects($this->once())->method('locateIdentifiersByType')->willReturnCallback(static fn () => yield $source3);
+        $locator4->expects($this->once())->method('locateIdentifiersByType')->willReturnCallback(static fn () => yield from []);
+
+        $generator = (new AggregateSourceLocator([
+            $locator1,
+            $locator2,
+            $locator3,
+            $locator4,
+        ]))->locateIdentifiersByType($this->getMockReflector(), $identifierType);
+
+        $result = [];
+        foreach ($generator as $reflectionClass) {
+            $result[] = $reflectionClass;
+        }
 
         self::assertSame(
             [$source2, $source3],
-            (new AggregateSourceLocator([
-                $locator1,
-                $locator2,
-                $locator3,
-                $locator4,
-            ]))->locateIdentifiersByType($this->getMockReflector(), $identifierType),
+            $result,
         );
     }
 }

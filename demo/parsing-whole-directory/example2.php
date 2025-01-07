@@ -23,6 +23,11 @@ $sourceLocator = new AggregateSourceLocator([
 
 $reflector = new DefaultReflector($sourceLocator);
 
-$classReflections = $reflector->reflectAllClasses();
+$generator = $reflector->reflectAllClasses();
+
+$classReflections = [];
+foreach ($generator as $classReflection) {
+    $classReflections[] = $classReflection;
+}
 
 !empty($classReflections) && print 'success';

@@ -56,9 +56,14 @@ class DefaultReflectorTest extends TestCase
 
     public function testReflectAllClasses(): void
     {
-        $classes = (new DefaultReflector(
+        $generator = (new DefaultReflector(
             new SingleFileSourceLocator(__DIR__ . '/../Fixture/ExampleClass.php', $this->astLocator),
         ))->reflectAllClasses();
+
+        $classes = [];
+        foreach ($generator as $class) {
+            $classes[] = $class;
+        }
 
         self::assertContainsOnlyInstancesOf(ReflectionClass::class, $classes);
         self::assertCount(11, $classes);
@@ -88,9 +93,14 @@ class DefaultReflectorTest extends TestCase
 
     public function testReflectAllFunction(): void
     {
-        $functions = (new DefaultReflector(
+        $generator = (new DefaultReflector(
             new SingleFileSourceLocator(__DIR__ . '/../Fixture/Functions.php', $this->astLocator),
         ))->reflectAllFunctions();
+
+        $functions = [];
+        foreach ($generator as $reflection) {
+            $functions[] = $reflection;
+        }
 
         self::assertContainsOnlyInstancesOf(ReflectionFunction::class, $functions);
         self::assertCount(2, $functions);
@@ -120,9 +130,14 @@ class DefaultReflectorTest extends TestCase
 
     public function testReflectAllConstants(): void
     {
-        $constants = (new DefaultReflector(
+        $generator = (new DefaultReflector(
             new SingleFileSourceLocator(__DIR__ . '/../Fixture/Constants.php', $this->astLocator),
         ))->reflectAllConstants();
+
+        $constants = [];
+        foreach ($generator as $reflection) {
+            $constants[] = $reflection;
+        }
 
         self::assertContainsOnlyInstancesOf(ReflectionConstant::class, $constants);
         self::assertCount(5, $constants);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflectionTest\SourceLocator\Type;
 
+use Generator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -20,6 +21,7 @@ use function array_merge;
 use function array_unique;
 use function count;
 use function in_array;
+use function iterator_count;
 use function random_int;
 use function range;
 use function spl_object_id;
@@ -134,34 +136,96 @@ class MemoizingSourceLocatorTest extends TestCase
             ) use (
                 $symbols1,
                 $symbols2,
-            ): array {
+            ): Generator {
                 if ($reflector === $this->reflector1) {
-                    return $symbols1[$identifierType->getName()];
+                    yield from $symbols1[$identifierType->getName()];
+
+                    return;
                 }
 
-                return $symbols2[$identifierType->getName()];
+                yield from $symbols2[$identifierType->getName()];
             });
 
         foreach ($types as $type) {
+            $generator = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $type);
+
+            $reflections1 = [];
+            foreach ($generator as $reflection) {
+                $reflections1[] = $reflection;
+            }
+
             self::assertSame(
                 $symbols1[$type->getName()],
-                $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $type),
+                $reflections1,
             );
+
+            $generator = $this->memoizingLocator->locateIdentifiersByType($this->reflector2, $type);
+
+            $reflections2 = [];
+            foreach ($generator as $reflection) {
+                $reflections2[] = $reflection;
+            }
+
             self::assertSame(
                 $symbols2[$type->getName()],
-                $this->memoizingLocator->locateIdentifiersByType($this->reflector2, $type),
+                $reflections2,
             );
 
             // second execution - ensures that memoization is in place
+            $generator = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $type);
+
+            $reflections1 = [];
+            foreach ($generator as $reflection) {
+                $reflections1[] = $reflection;
+            }
+
             self::assertSame(
                 $symbols1[$type->getName()],
-                $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $type),
+                $reflections1,
             );
+
+            $generator = $this->memoizingLocator->locateIdentifiersByType($this->reflector2, $type);
+
+            $reflections2 = [];
+            foreach ($generator as $reflection) {
+                $reflections2[] = $reflection;
+            }
+
             self::assertSame(
                 $symbols2[$type->getName()],
-                $this->memoizingLocator->locateIdentifiersByType($this->reflector2, $type),
+                $reflections2,
             );
         }
+    }
+
+    public function testNotCompletedMemoization(): void
+    {
+        $this
+            ->wrappedLocator
+            ->expects($this->exactly(2))
+            ->method('locateIdentifiersByType')
+            ->with($this->reflector1)
+            ->willReturnCallback(function (): Generator {
+                yield from [
+                    $this->createMock(Reflection::class),
+                    $this->createMock(Reflection::class),
+                    $this->createMock(Reflection::class),
+                ];
+            });
+
+        $classType = new IdentifierType(IdentifierType::IDENTIFIER_CLASS);
+
+        $generator = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $classType);
+
+        // Started iterating but did not complete the operation
+        $generator->next();
+
+        // The cache will not be saved until we have completed all iterations
+        $generator2 = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $classType);
+        $this->assertSame(3, iterator_count($generator2));
+
+        $generator3 = $this->memoizingLocator->locateIdentifiersByType($this->reflector1, $classType);
+        $this->assertSame(3, iterator_count($generator3));
     }
 
     /**

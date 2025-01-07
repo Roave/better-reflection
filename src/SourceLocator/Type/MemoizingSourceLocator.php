@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Roave\BetterReflection\SourceLocator\Type;
 
+use Generator;
 use Roave\BetterReflection\Identifier\Identifier;
 use Roave\BetterReflection\Identifier\IdentifierType;
 use Roave\BetterReflection\Reflection\Reflection;
@@ -37,17 +38,23 @@ final class MemoizingSourceLocator implements SourceLocator
             = $this->wrappedSourceLocator->locateIdentifier($reflector, $identifier);
     }
 
-    /** @return list<Reflection> */
-    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): array
+    /** @return Generator<Reflection> */
+    public function locateIdentifiersByType(Reflector $reflector, IdentifierType $identifierType): Generator
     {
         $cacheKey = sprintf('%s_%s', $this->reflectorCacheKey($reflector), $this->identifierTypeToCacheKey($identifierType));
 
         if (array_key_exists($cacheKey, $this->cacheByIdentifierTypeKeyAndOid)) {
-            return $this->cacheByIdentifierTypeKeyAndOid[$cacheKey];
+            yield from $this->cacheByIdentifierTypeKeyAndOid[$cacheKey];
+
+            return;
         }
 
-        return $this->cacheByIdentifierTypeKeyAndOid[$cacheKey]
-            = $this->wrappedSourceLocator->locateIdentifiersByType($reflector, $identifierType);
+        $items = [];
+        foreach ($this->wrappedSourceLocator->locateIdentifiersByType($reflector, $identifierType) as $item) {
+            yield $items[] = $item;
+        }
+
+        $this->cacheByIdentifierTypeKeyAndOid[$cacheKey] = $items;
     }
 
     private function reflectorCacheKey(Reflector $reflector): string
