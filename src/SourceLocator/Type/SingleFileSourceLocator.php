@@ -11,6 +11,7 @@ use Roave\BetterReflection\SourceLocator\Exception\InvalidFileLocation;
 use Roave\BetterReflection\SourceLocator\FileChecker;
 use Roave\BetterReflection\SourceLocator\Located\LocatedSource;
 
+use function assert;
 use function file_get_contents;
 
 /**
@@ -43,8 +44,11 @@ class SingleFileSourceLocator extends AbstractSourceLocator
      */
     protected function createLocatedSource(Identifier $identifier): LocatedSource|null
     {
+        $fileContents = file_get_contents($this->fileName);
+        assert($fileContents !== false);
+
         return new LocatedSource(
-            file_get_contents($this->fileName),
+            $fileContents,
             $identifier->getName(),
             $this->fileName,
         );

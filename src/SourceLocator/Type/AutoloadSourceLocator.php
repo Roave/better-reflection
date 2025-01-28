@@ -86,9 +86,12 @@ class AutoloadSourceLocator extends AbstractSourceLocator
             return null;
         }
 
+        $fileContents = file_get_contents($locatedData['fileName']);
+        assert($fileContents !== false);
+
         if (strtolower($identifier->getName()) !== strtolower($locatedData['name'])) {
             return new AliasLocatedSource(
-                file_get_contents($locatedData['fileName']),
+                $fileContents,
                 $locatedData['name'],
                 $locatedData['fileName'],
                 $identifier->getName(),
@@ -96,7 +99,7 @@ class AutoloadSourceLocator extends AbstractSourceLocator
         }
 
         return new LocatedSource(
-            file_get_contents($locatedData['fileName']),
+            $fileContents,
             $identifier->getName(),
             $locatedData['fileName'],
         );
@@ -266,8 +269,11 @@ class AutoloadSourceLocator extends AbstractSourceLocator
                 continue;
             }
 
+            $fileContents = file_get_contents($includedFileName);
+            assert($fileContents !== false);
+
             /** @var list<Node\Stmt> $ast */
-            $ast = $this->phpParser->parse(file_get_contents($includedFileName));
+            $ast = $this->phpParser->parse($fileContents);
 
             $this->nodeTraverser->traverse($ast);
 

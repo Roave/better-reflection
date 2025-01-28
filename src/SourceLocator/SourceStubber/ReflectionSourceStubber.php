@@ -239,6 +239,7 @@ final class ReflectionSourceStubber implements SourceStubber
             $docComment = sprintf("/**\n* %s\n*/", implode("\n *", $annotations));
         } elseif ($annotations !== []) {
             $docComment = preg_replace('~\s+\*/$~', sprintf("\n* %s\n*/", implode("\n *", $annotations)), $docComment);
+            assert($docComment !== null);
         }
 
         $node->setDocComment(new Doc($docComment));

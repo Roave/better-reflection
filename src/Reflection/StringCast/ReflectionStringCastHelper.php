@@ -8,6 +8,7 @@ use Roave\BetterReflection\Reflection\ReflectionClassConstant;
 use Roave\BetterReflection\Reflection\ReflectionEnumCase;
 use Roave\BetterReflection\Reflection\ReflectionProperty;
 
+use function assert;
 use function preg_replace;
 
 /** @internal */
@@ -22,6 +23,9 @@ final class ReflectionStringCastHelper
             return '';
         }
 
-        return ($indent ? preg_replace('/(\n)(?!\n)/', '\1    ', $docComment) : $docComment) . "\n";
+        $indentedDocComment = $indent ? preg_replace('/(\n)(?!\n)/', '\1    ', $docComment) : $docComment;
+        assert($indentedDocComment !== null);
+
+        return $indentedDocComment . "\n";
     }
 }

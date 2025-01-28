@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "763dfaa2584302e43d9d9b808cae5eeb",
+    "content-hash": "018d018b49a97008c32c39ec4ffcb924",
     "packages": [
         {
             "name": "jetbrains/phpstorm-stubs",
@@ -496,69 +496,17 @@
             "time": "2023-10-30T13:38:26+00:00"
         },
         {
-            "name": "phpbench/dom",
-            "version": "0.3.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpbench/dom.git",
-                "reference": "786a96db538d0def931f5b19225233ec42ec7a72"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpbench/dom/zipball/786a96db538d0def931f5b19225233ec42ec7a72",
-                "reference": "786a96db538d0def931f5b19225233ec42ec7a72",
-                "shasum": ""
-            },
-            "require": {
-                "ext-dom": "*",
-                "php": "^7.3||^8.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.14",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^8.0||^9.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PhpBench\\Dom\\": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Daniel Leech",
-                    "email": "daniel@dantleech.com"
-                }
-            ],
-            "description": "DOM wrapper to simplify working with the PHP DOM implementation",
-            "support": {
-                "issues": "https://github.com/phpbench/dom/issues",
-                "source": "https://github.com/phpbench/dom/tree/0.3.3"
-            },
-            "abandoned": true,
-            "time": "2023-03-06T23:46:57+00:00"
-        },
-        {
             "name": "phpbench/phpbench",
-            "version": "1.3.1",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpbench/phpbench.git",
-                "reference": "a3e1ef08d9d7736d43a7fbd444893d6a073c0ca0"
+                "reference": "4248817222514421cba466bfa7adc7d8932345d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/a3e1ef08d9d7736d43a7fbd444893d6a073c0ca0",
-                "reference": "a3e1ef08d9d7736d43a7fbd444893d6a073c0ca0",
+                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/4248817222514421cba466bfa7adc7d8932345d4",
+                "reference": "4248817222514421cba466bfa7adc7d8932345d4",
                 "shasum": ""
             },
             "require": {
@@ -571,7 +519,6 @@
                 "ext-tokenizer": "*",
                 "php": "^8.1",
                 "phpbench/container": "^2.2",
-                "phpbench/dom": "~0.3.3",
                 "psr/log": "^1.1 || ^2.0 || ^3.0",
                 "seld/jsonlint": "^1.1",
                 "symfony/console": "^6.1 || ^7.0",
@@ -590,8 +537,8 @@
                 "phpstan/extension-installer": "^1.1",
                 "phpstan/phpstan": "^1.0",
                 "phpstan/phpstan-phpunit": "^1.0",
-                "phpunit/phpunit": "^10.4",
-                "rector/rector": "^0.18.11 || ^1.0.0",
+                "phpunit/phpunit": "^10.4 || ^11.0",
+                "rector/rector": "^1.2",
                 "symfony/error-handler": "^6.1 || ^7.0",
                 "symfony/var-dumper": "^6.1 || ^7.0"
             },
@@ -636,7 +583,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpbench/phpbench/issues",
-                "source": "https://github.com/phpbench/phpbench/tree/1.3.1"
+                "source": "https://github.com/phpbench/phpbench/tree/1.4.0"
             },
             "funding": [
                 {
@@ -644,7 +591,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-06-30T11:04:37+00:00"
+            "time": "2025-01-26T19:54:45+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -971,16 +918,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "11.5.3",
+            "version": "11.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "30e319e578a7b5da3543073e30002bf82042f701"
+                "reference": "e0da3559ec50a91f6a6a201473b607b5ccfd9a1b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/30e319e578a7b5da3543073e30002bf82042f701",
-                "reference": "30e319e578a7b5da3543073e30002bf82042f701",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/e0da3559ec50a91f6a6a201473b607b5ccfd9a1b",
+                "reference": "e0da3559ec50a91f6a6a201473b607b5ccfd9a1b",
                 "shasum": ""
             },
             "require": {
@@ -1052,7 +999,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.3"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.4"
             },
             "funding": [
                 {
@@ -1068,7 +1015,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-01-13T09:36:00+00:00"
+            "time": "2025-01-28T15:03:46+00:00"
         },
         {
             "name": "psr/cache",
