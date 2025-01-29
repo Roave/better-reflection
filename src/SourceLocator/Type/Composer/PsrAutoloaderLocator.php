@@ -17,6 +17,7 @@ use Roave\BetterReflection\SourceLocator\Type\Composer\Psr\PsrAutoloaderMapping;
 use Roave\BetterReflection\SourceLocator\Type\DirectoriesSourceLocator;
 use Roave\BetterReflection\SourceLocator\Type\SourceLocator;
 
+use function assert;
 use function file_get_contents;
 
 final class PsrAutoloaderLocator implements SourceLocator
@@ -31,11 +32,13 @@ final class PsrAutoloaderLocator implements SourceLocator
         foreach ($this->mapping->resolvePossibleFilePaths($identifier) as $file) {
             try {
                 FileChecker::assertReadableFile($file);
+                $fileContents = file_get_contents($file);
+                assert($fileContents !== false);
 
                 return $this->astLocator->findReflection(
                     $reflector,
                     new LocatedSource(
-                        file_get_contents($file),
+                        $fileContents,
                         $identifier->getName(),
                         $file,
                     ),

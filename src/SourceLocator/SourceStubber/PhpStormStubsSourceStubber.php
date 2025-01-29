@@ -340,8 +340,11 @@ final class PhpStormStubsSourceStubber implements SourceStubber
         $absoluteFilePath = $this->getAbsoluteFilePath($filePath);
         FileChecker::assertReadableFile($absoluteFilePath);
 
+        $fileContents = file_get_contents($absoluteFilePath);
+        assert($fileContents !== false);
+
         /** @var list<Node\Stmt> $ast */
-        $ast = $this->phpParser->parse(file_get_contents($absoluteFilePath));
+        $ast = $this->phpParser->parse($fileContents);
 
         // "@since" and "@removed" annotations in some cases do not contain a PHP version, but an extension version - e.g. "@since 1.3.0"
         // So we check PHP version only for stubs of core extensions
@@ -664,6 +667,7 @@ final class PhpStormStubsSourceStubber implements SourceStubber
             $docCommentText = sprintf('/** @%s */', $annotationName);
         } else {
             $docCommentText = preg_replace('~(\r?\n\s*)\*/~', sprintf('\1* @%s\1*/', $annotationName), $docComment->getText());
+            assert($docCommentText !== null);
         }
 
         $node->setDocComment(new Doc($docCommentText));
@@ -679,6 +683,8 @@ final class PhpStormStubsSourceStubber implements SourceStubber
         }
 
         $docCommentText = preg_replace('~@' . $annotationName . '.*$~m', '', $docComment->getText());
+        assert($docCommentText !== null);
+
         $node->setDocComment(new Doc($docCommentText));
     }
 

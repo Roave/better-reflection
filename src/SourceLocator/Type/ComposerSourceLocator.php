@@ -12,6 +12,7 @@ use Roave\BetterReflection\SourceLocator\Ast\Locator;
 use Roave\BetterReflection\SourceLocator\Exception\InvalidFileLocation;
 use Roave\BetterReflection\SourceLocator\Located\LocatedSource;
 
+use function assert;
 use function file_get_contents;
 
 /**
@@ -46,8 +47,11 @@ class ComposerSourceLocator extends AbstractSourceLocator
             return null;
         }
 
+        $fileContents = file_get_contents($filename);
+        assert($fileContents !== false);
+
         return new LocatedSource(
-            file_get_contents($filename),
+            $fileContents,
             $identifier->getName(),
             $filename,
         );

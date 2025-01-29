@@ -193,7 +193,11 @@ final class ReflectionProperty extends CoreReflectionProperty
         return $this->betterReflectionProperty->isDynamic();
     }
 
-    /** @psalm-mutation-free */
+    /**
+     * @return int-mask-of<self::IS_*>
+     *
+     * @psalm-mutation-free
+     */
     public function getModifiers(): int
     {
         return $this->betterReflectionProperty->getModifiers();
@@ -286,16 +290,14 @@ final class ReflectionProperty extends CoreReflectionProperty
         return $this->betterReflectionProperty->hasHooks();
     }
 
-    /** @psalm-suppress UndefinedClass */
-    public function hasHook(PropertyHookType $hookType): bool
+    public function hasHook(PropertyHookType $type): bool
     {
-        return $this->betterReflectionProperty->hasHook(BetterReflectionPropertyHookType::fromCoreReflectionPropertyHookType($hookType));
+        return $this->betterReflectionProperty->hasHook(BetterReflectionPropertyHookType::fromCoreReflectionPropertyHookType($type));
     }
 
-    /** @psalm-suppress UndefinedClass */
-    public function getHook(PropertyHookType $hookType): ReflectionMethod|null
+    public function getHook(PropertyHookType $type): ReflectionMethod|null
     {
-        $hook = $this->betterReflectionProperty->getHook(BetterReflectionPropertyHookType::fromCoreReflectionPropertyHookType($hookType));
+        $hook = $this->betterReflectionProperty->getHook(BetterReflectionPropertyHookType::fromCoreReflectionPropertyHookType($type));
         if ($hook === null) {
             return null;
         }

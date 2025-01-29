@@ -119,6 +119,8 @@ final class AnonymousClassObjectSourceLocator implements SourceLocator
         };
 
         $fileContents = file_get_contents($fileName);
+        assert($fileContents !== false);
+
         /** @var list<Node\Stmt> $ast */
         $ast = $this->parser->parse($fileContents);
 
